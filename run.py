@@ -50,30 +50,42 @@ def run(script_path):
     Args:
         script_path (str): path to script folder
     """
-    process = subprocess.Popen(
-            [
-                "bash",
-                "-c",
-                f"cd {script_path} && ./Palworld.sh",
-                "-useperfthreads",
-                "-NoAsyncLoadingThread",
-                "-UseMultithreadForDS",
-            ]
-    )
-    
-    while True:
-        time.sleep(60)
+    try:
+        logging.info("Starting server.")
+        process = subprocess.Popen(
+                [
+                    "bash",
+                    "-c",
+                    f"{script_path}/PalServer.sh",
+                    "-useperfthreads",
+                    "-NoAsyncLoadingThread",
+                    "-UseMultithreadForDS",
+                ]
+        )
 
-        process_info = psutil.Process(process.pid)
-        memory_percent = process_info.memory_percent()
-        logging.info(f"Memory usage: {memory_percent}")
-        if memory_percent > 80.0:
-            logging.info("Memory usage is too high, restarting server...")
-            process.send_signal(signal.SIGINT)
-            time.sleep(10)
-            return
+        while True:
+            time.sleep(60)
+
+            process_info = psutil.Process(process.pid)
+            memory_percent = process_info.memory_percent()
+            logging.info(f"Memory usage: {memory_percent}")
+            if memory_percent > 80.0:
+                logging.info("Memory usage is too high, restarting server...")
+                process.send_signal(signal.SIGINT)
+                time.sleep(10)
+                return
+    except KeyboardInterrupt:
+        logging.info("KeyboardInterrupt, exiting...")
+        process.send_signal(signal.SIGINT)
+        raise KeyboardInterrupt
         
 def main():
-    while True:
-        run()
-        file_backup(SAVE_PATH, BACKUP_PATH)
+    try:
+        while True:
+            run(SCRIPT_PATH)
+            file_backup(SAVE_PATH, BACKUP_PATH)
+    except KeyboardInterrupt:
+        return
+        
+if __name__ == "__main__":
+    main()
