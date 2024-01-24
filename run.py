@@ -9,8 +9,6 @@ import signal
 import psutil
 import logging
 
-from functools import lru_cache
-
 # logging config
 logging.basicConfig(
     filename='run.log',
@@ -19,7 +17,6 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-@lru_cache(maxsize=1)
 def find_pid_by_name(name):
     """find pid by name
 
