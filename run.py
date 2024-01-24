@@ -9,6 +9,8 @@ import signal
 import psutil
 import logging
 
+from functools import lru_cache
+
 # logging config
 logging.basicConfig(
     filename='run.log',
@@ -16,6 +18,20 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
+
+@lru_cache(maxsize=1)
+def find_pid_by_name(name):
+    """find pid by name
+
+    Args:
+        name (str): process name
+
+    Returns:
+        int: pid
+    """
+    for proc in psutil.process_iter():
+        if name in proc.name():
+            return proc.pid
 
 def file_backup(save_path, backup_path):
     """file backup after server reboot
@@ -65,8 +81,8 @@ def run(script_path):
 
         while True:
             time.sleep(60)
-
-            process_info = psutil.Process(process.pid)
+            pal_pid = find_pid_by_name("PalServer-Linux")
+            process_info = psutil.Process(pal_pid)
             memory_percent = process_info.memory_percent()
             logging.info(f"Memory usage: {memory_percent}")
             if memory_percent > 80.0:
